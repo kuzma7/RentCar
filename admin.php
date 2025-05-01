@@ -1,4 +1,110 @@
 <?php
+session_start();
+
+// Настройка логина и пароля (можно вынести в .env или config)
+$valid_username = 'admin';
+$valid_password = '1234';
+
+// Проверка выхода
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header("Location: admin.php");
+    exit;
+}
+
+// Если пользователь ещё не авторизован
+if (!isset($_SESSION['authenticated'])) {
+    // Обработка формы входа
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username'], $_POST['password'])) {
+        if ($_POST['username'] === $valid_username && $_POST['password'] === $valid_password) {
+            $_SESSION['authenticated'] = true;
+            header("Location: admin.php");
+            exit;
+        } else {
+            $error = 'Неверный логин или пароль.';
+        }
+    }
+
+    // Форма авторизации
+    ?>
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <title>Вход в админку</title>
+        <style>
+    body {
+        font-family: Arial;
+        background: #f5f5f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    form {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        width: 300px;
+        box-sizing: border-box;
+    }
+
+    input {
+        display: block;
+        margin-bottom: 10px;
+        padding: 8px;
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    button {
+        padding: 8px 12px;
+        width: 100%;
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    .error {
+        color: red;
+        margin-bottom: 10px;
+    }
+
+    h2 {
+        margin-top: 0;
+    }
+</style>
+
+    </head>
+    <body>
+    <form method="POST">
+        <h2>Вход в админку</h2>
+        <?php if (!empty($error)) echo '<div class="error">'.$error.'</div>'; ?>
+        <input type="text" name="username" placeholder="Логин" required>
+        <input type="password" name="password" placeholder="Пароль" required>
+        <button type="submit">Войти</button>
+    </form>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+?>
+
+
+
+<?php
 // Подключение к базе данных
 $host = 'localhost';
 $port = '3325';
@@ -48,6 +154,7 @@ $orders = $pdo->query("SELECT * FROM orders ORDER BY created_at DESC")->fetchAll
 </head>
 <body>
 <div class="container">
+    <p><a href="?logout=1">Выйти</a></p>
     <h2>Управление заявками</h2>
     <table>
         <thead>
