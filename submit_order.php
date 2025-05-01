@@ -1,10 +1,10 @@
 <?php
 // Подключение к базе данных
 $host = 'localhost';
-$port = '3325';              // Указан нестандартный порт
-$db = 'car_rental';          // имя вашей БД
-$user = 'root';              // логин
-$pass = 'root';              // пароль
+$port = '3325';
+$db = 'car_rental';
+$user = 'root';
+$pass = 'root';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
@@ -25,13 +25,24 @@ $phone = $_POST['phone'] ?? '';
 $car = $_POST['car'] ?? '';
 
 if (empty($name) || empty($phone) || empty($car)) {
-    die("Пожалуйста, заполните все поля.");
+    http_response_code(400);
+    echo "Пожалуйста, заполните все поля.";
+    exit;
 }
 
-// Сохраняем в БД
+// Проверка наличия автомобиля в базе
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM cars WHERE name = ?");
+$stmt->execute([$car]);
+$carExists = $stmt->fetchColumn() > 0;
+
+// Сохраняем заявку в таблицу orders
 $stmt = $pdo->prepare("INSERT INTO orders (name, phone, car_name) VALUES (?, ?, ?)");
 $stmt->execute([$name, $phone, $car]);
 
-// Сообщение об успехе
-echo "Заявка успешно отправлена!";
+// Ответ клиенту
+if ($carExists) {
+    echo "Заявка успешно отправлена!";
+} else {
+    echo "Такого автомобиля нет, но мы свяжемся с вами.";
+}
 ?>
