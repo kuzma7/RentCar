@@ -38,6 +38,13 @@ $cars = $stmt->fetchAll();
             font-weight: bold;
             margin-left: 15px;
         }
+
+        /* Добавляем стиль для изображений автомобилей */
+        .car-item-img img {
+            max-width: 350px;  /* Максимальная ширина */
+            max-height: 300px; /* Максимальная высота */
+            object-fit: cover; /* Сохраняет пропорции изображения, обрезая лишнее */
+        }
     </style>
 </head>
 <body>
