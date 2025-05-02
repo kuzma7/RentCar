@@ -24,6 +24,13 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
             box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
             z-index: 1000;
         }
+        
+        /* Добавляем стиль для номера телефона */
+        .phone-number {
+            white-space: nowrap;
+            font-weight: bold;
+            margin-left: 15px;
+        }
     </style>
 </head>
 <body>
@@ -37,7 +44,8 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
                 <li class="menu-items"><a href="index.html">Главная</a></li>
                 <li class="menu-items"><a href="cars.php">Автомобили</a></li>
                 <li class="menu-items"><a href="order.php">Бронирование авто</a></li>
-                <li>+7(920)-078-95-28</li>
+                <li class="menu-items"><a href="reviews.php">Отзывы</a></li>
+                <li class="phone-number">+7(920)-078-95-28</li>
             </ul>
         </nav>
     </div>

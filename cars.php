@@ -25,13 +25,20 @@ $cars = $stmt->fetchAll();
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <title>Автомобили</title>
+    <style>
+        .phone-number {
+            white-space: nowrap;
+            font-weight: bold;
+            margin-left: 15px;
+        }
+    </style>
 </head>
 <body>
 <header class="header">
@@ -43,9 +50,9 @@ $cars = $stmt->fetchAll();
             <ul>
                 <li class="menu-items"><a href="index.html">Главная</a></li>
                 <li class="menu-items"><a href="cars.php">Автомобили</a></li>
-                <li class="menu-items"><a href="order.php">Бронирование авто</a></li>
-
-                <li>+7(920)-078-95-28</li>
+                <li class="menu-items no-wrap"><a href="order.php">Бронирование авто</a></li>
+                <li class="menu-items"><a href="reviews.php">Отзывы</a></li>
+                <li class="phone-number">+7(920)-078-95-28</li>
             </ul>
         </nav>
     </div>
