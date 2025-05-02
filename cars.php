@@ -44,6 +44,7 @@ $cars = $stmt->fetchAll();
             max-width: 350px;  /* Максимальная ширина */
             max-height: 300px; /* Максимальная высота */
             object-fit: cover; /* Сохраняет пропорции изображения, обрезая лишнее */
+            border-radius: 10%;
         }
     </style>
 </head>
