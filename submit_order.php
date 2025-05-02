@@ -39,6 +39,23 @@ $carExists = $stmt->fetchColumn() > 0;
 $stmt = $pdo->prepare("INSERT INTO orders (name, phone, car_name) VALUES (?, ?, ?)");
 $stmt->execute([$name, $phone, $car]);
 
+// Данные для передачи в Python-бот
+$data = [
+    'name' => $name,
+    'phone' => $phone,
+    'car_name' => $car
+];
+
+// Путь к вашему Python-скрипту
+$pythonScript = 'C:\Users\User\PycharmProjects\notify_rent_cars_bot\notify_bot.py'; // Поменяйте на путь к вашему скрипту
+
+// Преобразуем данные в JSON
+$jsonData = json_encode($data);
+
+// Выполнение Python-скрипта с передачей данных через STDIN
+$command = "echo $jsonData | python $pythonScript";
+$output = shell_exec($command);
+
 // Ответ клиенту
 if ($carExists) {
     echo "Заявка успешно отправлена!";
