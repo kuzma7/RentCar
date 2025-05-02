@@ -45,7 +45,7 @@ if (!isset($_SESSION['authenticated'])) {
         }
     }
 
-    // Форма авторизации
+    // Форма авторизации (остается без изменений)
     ?>
     <!DOCTYPE html>
     <html lang="ru">
@@ -118,41 +118,94 @@ if (!isset($_SESSION['authenticated'])) {
 if (isset($_GET['action']) && $_GET['action'] === 'cars') {
     // Удаление автомобиля
     if (isset($_GET['delete'])) {
-        $stmt = $pdo->prepare("DELETE FROM cars WHERE id = ?");
-        $stmt->execute([$_GET['delete']]);
-        header("Location: admin.php?action=cars");
-        exit;
+        $pdo->beginTransaction();
+        try {
+            // Сначала удаляем детали
+            $stmt = $pdo->prepare("DELETE FROM car_details WHERE car_id = ?");
+            $stmt->execute([$_GET['delete']]);
+            
+            // Затем сам автомобиль
+            $stmt = $pdo->prepare("DELETE FROM cars WHERE id = ?");
+            $stmt->execute([$_GET['delete']]);
+            
+            $pdo->commit();
+            header("Location: admin.php?action=cars");
+            exit;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            die("Ошибка при удалении автомобиля: " . $e->getMessage());
+        }
     }
 
     // Добавление/редактирование автомобиля
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $data = [
-            'name' => $_POST['name'],
-            'image_url' => $_POST['image_url'],
-            'drive_type' => $_POST['drive_type'],
-            'engine' => $_POST['engine'],
-            'seats' => $_POST['seats']
-        ];
+        $pdo->beginTransaction();
+        try {
+            $carData = [
+                'name' => $_POST['name'],
+                'image_url' => $_POST['image_url'],
+                'drive_type' => $_POST['drive_type'],
+                'engine' => $_POST['engine'],
+                'seats' => $_POST['seats']
+            ];
 
-        if (isset($_POST['id']) && !empty($_POST['id'])) {
-            // Редактирование
-            $data['id'] = $_POST['id'];
-            $stmt = $pdo->prepare("UPDATE cars SET name = :name, image_url = :image_url, drive_type = :drive_type, engine = :engine, seats = :seats WHERE id = :id");
-            $stmt->execute($data);
-        } else {
-            // Добавление
-            $stmt = $pdo->prepare("INSERT INTO cars (name, image_url, drive_type, engine, seats) VALUES (:name, :image_url, :drive_type, :engine, :seats)");
-            $stmt->execute($data);
+            $carDetailsData = [
+                'price_per_hour' => $_POST['price_per_hour'],
+                'engine_type' => $_POST['engine_type'],
+                'transmission' => $_POST['transmission'],
+                'acceleration' => $_POST['acceleration'],
+                'power' => $_POST['power'],
+                'description' => $_POST['description']
+            ];
+
+            if (isset($_POST['id']) && !empty($_POST['id'])) {
+                // Редактирование
+                $carData['id'] = $_POST['id'];
+                $stmt = $pdo->prepare("UPDATE cars SET name = :name, image_url = :image_url, drive_type = :drive_type, engine = :engine, seats = :seats WHERE id = :id");
+                $stmt->execute($carData);
+                
+                $carDetailsData['car_id'] = $_POST['id'];
+                $stmt = $pdo->prepare("
+                    UPDATE car_details SET 
+                        price_per_hour = :price_per_hour,
+                        engine_type = :engine_type,
+                        transmission = :transmission,
+                        acceleration = :acceleration,
+                        power = :power,
+                        description = :description
+                    WHERE car_id = :car_id
+                ");
+                $stmt->execute($carDetailsData);
+            } else {
+                // Добавление
+                $stmt = $pdo->prepare("INSERT INTO cars (name, image_url, drive_type, engine, seats) VALUES (:name, :image_url, :drive_type, :engine, :seats)");
+                $stmt->execute($carData);
+                $carId = $pdo->lastInsertId();
+                
+                $carDetailsData['car_id'] = $carId;
+                $stmt = $pdo->prepare("
+                    INSERT INTO car_details 
+                        (car_id, price_per_hour, engine_type, transmission, acceleration, power, description) 
+                    VALUES 
+                        (:car_id, :price_per_hour, :engine_type, :transmission, :acceleration, :power, :description)
+                ");
+                $stmt->execute($carDetailsData);
+            }
+            
+            $pdo->commit();
+            header("Location: admin.php?action=cars");
+            exit;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            die("Ошибка при сохранении автомобиля: " . $e->getMessage());
         }
-        
-        header("Location: admin.php?action=cars");
-        exit;
     }
 
     // Получение данных об автомобилях и количестве броней
     $cars = $pdo->query("
-        SELECT c.*, COUNT(o.id) as bookings_count 
+        SELECT c.*, cd.price_per_hour, COUNT(o.id) as bookings_count 
         FROM cars c 
+        LEFT JOIN car_details cd ON c.id = cd.car_id
         LEFT JOIN orders o ON o.car_name = c.name 
         GROUP BY c.id
     ")->fetchAll();
@@ -160,7 +213,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'cars') {
     // Получение данных одного автомобиля для редактирования
     $editCar = null;
     if (isset($_GET['edit'])) {
-        $stmt = $pdo->prepare("SELECT * FROM cars WHERE id = ?");
+        $stmt = $pdo->prepare("
+            SELECT c.*, cd.* 
+            FROM cars c 
+            JOIN car_details cd ON c.id = cd.car_id 
+            WHERE c.id = ?
+        ");
         $stmt->execute([$_GET['edit']]);
         $editCar = $stmt->fetch();
     }
@@ -180,7 +238,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'cars') {
             th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
             .form-group { margin-bottom: 15px; }
             label { display: block; margin-bottom: 5px; }
-            input, select { width: 100%; padding: 8px; box-sizing: border-box; }
+            input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+            textarea { min-height: 100px; resize: vertical; }
             .btn { padding: 8px 12px; background: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; }
             .btn:hover { background: #0056b3; }
             .btn-danger { background: #dc3545; }
@@ -189,6 +248,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'cars') {
             .nav a { margin-right: 15px; text-decoration: none; color: #007BFF; }
             .nav a:hover { text-decoration: underline; }
             .car-image { max-width: 100px; max-height: 60px; }
+            .price { font-weight: bold; color: #28a745; }
+            .form-section { background: white; padding: 20px; border-radius: 4px; margin-bottom: 30px; }
+            .form-section h3 { margin-top: 0; }
+            .form-row { display: flex; gap: 20px; }
+            .form-row .form-group { flex: 1; }
         </style>
     </head>
     <body>
@@ -202,53 +266,99 @@ if (isset($_GET['action']) && $_GET['action'] === 'cars') {
         <h2>Управление автомобилями</h2>
         
         <!-- Форма добавления/редактирования -->
-        <form method="POST" style="margin-bottom: 30px; background: white; padding: 20px; border-radius: 4px;">
-            <h3><?= $editCar ? 'Редактировать автомобиль' : 'Добавить новый автомобиль' ?></h3>
-            <?php if ($editCar): ?>
-                <input type="hidden" name="id" value="<?= $editCar['id'] ?>">
-            <?php endif; ?>
-            
-            <div class="form-group">
-                <label>Название:</label>
-                <input type="text" name="name" value="<?= $editCar ? htmlspecialchars($editCar['name']) : '' ?>" required>
-            </div>
-            
-            <div class="form-group">
-                <label>Ссылка на изображение:</label>
-                <input type="text" name="image_url" value="<?= $editCar ? htmlspecialchars($editCar['image_url']) : '' ?>">
-            </div>
-            
-            <div class="form-group">
-                <label>Тип привода:</label>
-                <select name="drive_type" required>
-                    <option value="">Выберите тип</option>
-                    <option value="Передний" <?= $editCar && $editCar['drive_type'] === 'Передний' ? 'selected' : '' ?>>Передний</option>
-                    <option value="Задний" <?= $editCar && $editCar['drive_type'] === 'Задний' ? 'selected' : '' ?>>Задний</option>
-                    <option value="Полный" <?= $editCar && $editCar['drive_type'] === 'Полный' ? 'selected' : '' ?>>Полный</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Двигатель:</label>
-                <select name="engine" required>
-                    <option value="">Выберите тип</option>
-                    <option value="Бензин" <?= $editCar && $editCar['engine'] === 'Бензин' ? 'selected' : '' ?>>Бензин</option>
-                    <option value="Дизель" <?= $editCar && $editCar['engine'] === 'Дизель' ? 'selected' : '' ?>>Дизель</option>
-                    <option value="Электро" <?= $editCar && $editCar['engine'] === 'Электро' ? 'selected' : '' ?>>Электро</option>
-                    <option value="Гибрид" <?= $editCar && $editCar['engine'] === 'Гибрид' ? 'selected' : '' ?>>Гибрид</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Количество мест:</label>
-                <input type="number" name="seats" min="2" max="9" value="<?= $editCar ? htmlspecialchars($editCar['seats']) : '5' ?>" required>
-            </div>
-            
-            <button type="submit" class="btn"><?= $editCar ? 'Обновить' : 'Добавить' ?></button>
-            <?php if ($editCar): ?>
-                <a href="admin.php?action=cars" class="btn">Отмена</a>
-            <?php endif; ?>
-        </form>
+        <div class="form-section">
+            <form method="POST">
+                <h3><?= $editCar ? 'Редактировать автомобиль' : 'Добавить новый автомобиль' ?></h3>
+                <?php if ($editCar): ?>
+                    <input type="hidden" name="id" value="<?= $editCar['id'] ?>">
+                <?php endif; ?>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Название:</label>
+                        <input type="text" name="name" value="<?= $editCar ? htmlspecialchars($editCar['name']) : '' ?>" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Ссылка на изображение:</label>
+                        <input type="text" name="image_url" value="<?= $editCar ? htmlspecialchars($editCar['image_url']) : '' ?>">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Тип привода:</label>
+                        <select name="drive_type" required>
+                            <option value="">Выберите тип</option>
+                            <option value="Передний" <?= $editCar && $editCar['drive_type'] === 'Передний' ? 'selected' : '' ?>>Передний</option>
+                            <option value="Задний" <?= $editCar && $editCar['drive_type'] === 'Задний' ? 'selected' : '' ?>>Задний</option>
+                            <option value="Полный" <?= $editCar && $editCar['drive_type'] === 'Полный' ? 'selected' : '' ?>>Полный</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Двигатель:</label>
+                        <select name="engine" required>
+                            <option value="">Выберите тип</option>
+                            <option value="Бензин" <?= $editCar && $editCar['engine'] === 'Бензин' ? 'selected' : '' ?>>Бензин</option>
+                            <option value="Дизель" <?= $editCar && $editCar['engine'] === 'Дизель' ? 'selected' : '' ?>>Дизель</option>
+                            <option value="Электро" <?= $editCar && $editCar['engine'] === 'Электро' ? 'selected' : '' ?>>Электро</option>
+                            <option value="Гибрид" <?= $editCar && $editCar['engine'] === 'Гибрид' ? 'selected' : '' ?>>Гибрид</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Количество мест:</label>
+                        <input type="number" name="seats" min="2" max="9" value="<?= $editCar ? htmlspecialchars($editCar['seats']) : '5' ?>" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Цена за час (₽):</label>
+                        <input type="number" step="0.01" min="0" name="price_per_hour" value="<?= $editCar ? htmlspecialchars($editCar['price_per_hour']) : '0' ?>" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Тип двигателя (детально):</label>
+                        <input type="text" name="engine_type" value="<?= $editCar ? htmlspecialchars($editCar['engine_type']) : '' ?>" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Трансмиссия:</label>
+                        <select name="transmission" required>
+                            <option value="">Выберите тип</option>
+                            <option value="Автомат" <?= $editCar && $editCar['transmission'] === 'Автомат' ? 'selected' : '' ?>>Автомат</option>
+                            <option value="Механика" <?= $editCar && $editCar['transmission'] === 'Механика' ? 'selected' : '' ?>>Механика</option>
+                            <option value="Робот" <?= $editCar && $editCar['transmission'] === 'Робот' ? 'selected' : '' ?>>Робот</option>
+                            <option value="Вариатор" <?= $editCar && $editCar['transmission'] === 'Вариатор' ? 'selected' : '' ?>>Вариатор</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Разгон 0-100 км/ч (сек):</label>
+                        <input type="number" step="0.1" min="0" name="acceleration" value="<?= $editCar ? htmlspecialchars($editCar['acceleration']) : '0' ?>" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Мощность (л.с.):</label>
+                        <input type="number" min="0" name="power" value="<?= $editCar ? htmlspecialchars($editCar['power']) : '0' ?>" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Описание:</label>
+                    <textarea name="description" required><?= $editCar ? htmlspecialchars($editCar['description']) : '' ?></textarea>
+                </div>
+                
+                <button type="submit" class="btn"><?= $editCar ? 'Обновить' : 'Добавить' ?></button>
+                <?php if ($editCar): ?>
+                    <a href="admin.php?action=cars" class="btn">Отмена</a>
+                <?php endif; ?>
+            </form>
+        </div>
         
         <!-- Таблица автомобилей -->
         <table>
@@ -257,6 +367,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'cars') {
                     <th>ID</th>
                     <th>Изображение</th>
                     <th>Название</th>
+                    <th>Цена/час</th>
                     <th>Привод</th>
                     <th>Двигатель</th>
                     <th>Мест</th>
@@ -274,6 +385,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'cars') {
                             <?php endif; ?>
                         </td>
                         <td><?= htmlspecialchars($car['name']) ?></td>
+                        <td class="price"><?= number_format($car['price_per_hour'], 2) ?> ₽</td>
                         <td><?= htmlspecialchars($car['drive_type']) ?></td>
                         <td><?= htmlspecialchars($car['engine']) ?></td>
                         <td><?= $car['seats'] ?></td>
@@ -293,7 +405,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'cars') {
     exit;
 }
 
-// Обработка заявок (ваш существующий код)
+// Обработка заявок (остается без изменений)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['status'])) {
     $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
     $stmt->execute([$_POST['status'], $_POST['order_id']]);
