@@ -7,6 +7,7 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <title>Отзывы об автомобилях</title>
     <style>
@@ -28,10 +29,10 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
         .review-form {
             max-width: 600px;
             margin: 0 auto;
-            padding: 25px; /* Увеличено для лучших отступов */
+            padding: 25px;
             background: #f9f9f9;
             border-radius: 8px;
-            box-sizing: border-box; /* Важно для корректного расчета ширины */
+            box-sizing: border-box;
         }
         
         .review-input, .review-textarea {
@@ -41,7 +42,7 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 16px;
-            box-sizing: border-box; /* Учитываем padding в ширине */
+            box-sizing: border-box;
         }
         
         .review-textarea {
@@ -50,19 +51,40 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
         }
         
         .rating-container {
-            margin-bottom: 15px;
-            padding: 0 5px; /* Добавлены боковые отступы */
+            margin: 20px 0;
+            direction: rtl;
+            text-align: center;
         }
         
         .rating-container label {
-            margin-right: 15px;
+            color: #ddd;
+            font-size: 30px;
+            cursor: pointer;
+            transition: color 0.2s;
+            margin: 0 3px;
+            display: inline-block;
+        }
+        
+        .rating-container input[type="radio"] {
+            display: none;
+        }
+        
+        .rating-container label:hover,
+        .rating-container label:hover ~ label,
+        .rating-container input[type="radio"]:checked ~ label {
+            color: #FFD700;
+        }
+        
+        .rating-text {
+            margin-top: 10px;
             font-size: 16px;
-            white-space: nowrap; /* Запрещаем перенос текста */
+            color: #666;
+            text-align: center;
         }
         
         .reviews-list {
             margin-top: 40px;
-            padding: 0 10px; /* Добавлены боковые отступы */
+            padding: 0 10px;
         }
         
         .review-item {
@@ -77,7 +99,7 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
             display: flex;
             justify-content: space-between;
             margin-bottom: 10px;
-            flex-wrap: wrap; /* Разрешаем перенос при необходимости */
+            flex-wrap: wrap;
         }
         
         .review-author {
@@ -92,7 +114,8 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
         
         .review-rating {
             color: #FFD700;
-            font-weight: bold;
+            font-size: 18px;
+            margin-left: 10px;
         }
         
         .review-date {
@@ -102,7 +125,7 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
         
         .review-content {
             line-height: 1.6;
-            padding: 0 5px; /* Добавлены небольшие боковые отступы */
+            padding: 0 5px;
         }
         
         .phone-number {
@@ -111,14 +134,33 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
             margin-left: 15px;
         }
         
-        /* Стили для кнопки */
         .button {
             width: 100%;
             padding: 15px;
             margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
         }
         
-        /* Медиа-запрос для мобильных устройств */
+        .button:hover {
+            background-color: #45a049;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        .rating-container input[type="radio"]:checked + label {
+            animation: pulse 0.5s;
+        }
+        
         @media (max-width: 768px) {
             .review-form {
                 padding: 15px;
@@ -126,8 +168,8 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
             }
             
             .rating-container label {
-                display: block;
-                margin: 5px 0;
+                font-size: 25px;
+                margin: 0 2px;
             }
         }
     </style>
@@ -164,12 +206,22 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
                    value="<?= $carValue ?>" required>
             
             <div class="rating-container">
-                <label>Оценка:</label>
-                <label><input type="radio" name="rating" value="5" required> 5 (Отлично)</label>
-                <label><input type="radio" name="rating" value="4"> 4 (Хорошо)</label>
-                <label><input type="radio" name="rating" value="3"> 3 (Удовлетворительно)</label>
-                <label><input type="radio" name="rating" value="2"> 2 (Плохо)</label>
-                <label><input type="radio" name="rating" value="1"> 1 (Ужасно)</label>
+                <input type="radio" id="star5" name="rating" value="5" required>
+                <label for="star5" title="Отлично"><i class="fas fa-star"></i></label>
+                
+                <input type="radio" id="star4" name="rating" value="4">
+                <label for="star4" title="Хорошо"><i class="fas fa-star"></i></label>
+                
+                <input type="radio" id="star3" name="rating" value="3">
+                <label for="star3" title="Удовлетворительно"><i class="fas fa-star"></i></label>
+                
+                <input type="radio" id="star2" name="rating" value="2">
+                <label for="star2" title="Плохо"><i class="fas fa-star"></i></label>
+                
+                <input type="radio" id="star1" name="rating" value="1">
+                <label for="star1" title="Ужасно"><i class="fas fa-star"></i></label>
+                
+                <div class="rating-text">Оцените автомобиль</div>
             </div>
             
             <textarea class="review-textarea" name="review" placeholder="Ваш отзыв" required></textarea>
@@ -222,7 +274,7 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
             if (xhr.status === 200) {
                 document.getElementById("popup").style.display = "block";
                 document.getElementById("reviewForm").reset();
-                loadReviews(); // Обновляем список отзывов
+                loadReviews();
                 setTimeout(function() {
                     document.getElementById("popup").style.display = "none";
                 }, 3000);
