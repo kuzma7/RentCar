@@ -114,7 +114,9 @@ $cars = $stmt->fetchAll();
             <?php foreach ($cars as $car): ?>
                 <div class="car-item">
                     <div class="car-item-img">
-                        <img src="<?= htmlspecialchars($car['image_url']) ?>" alt="<?= htmlspecialchars($car['name']) ?>">
+                        <a href="car.php?id=<?= $car['id'] ?>">
+                            <img src="<?= htmlspecialchars($car['image_url']) ?>" alt="<?= htmlspecialchars($car['name']) ?>">
+                        </a>
                     </div>
                     <div class="car-item-title"><?= htmlspecialchars($car['name']) ?></div>
                     <div class="car-item-info">
@@ -159,3 +161,7 @@ $cars = $stmt->fetchAll();
 </script>
 </body>
 </html>
+
+
+Как реализовать функцию getCarById?
+У меня есть 2 таблицы, вот с такой структурой:
