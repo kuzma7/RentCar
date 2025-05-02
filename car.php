@@ -82,6 +82,195 @@ $car = getCarById($pdo, $carId);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $car ? htmlspecialchars($car['name']) : 'Автомобиль не найден' ?></title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Стили для страницы автомобиля */
+        .car-detail {
+            padding: 40px 0;
+        }
+
+        .car-detail-top {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 50px;
+            align-items: flex-start;
+        }
+
+        .car-detail-image {
+            flex: 0 0 55%;
+            max-width: 350px;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .car-detail-image:hover {
+            transform: translateY(-5px);
+        }
+
+        .car-detail-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .car-detail-info {
+            flex: 1;
+            padding: 20px;
+            position: sticky;
+            top: 20px;
+        }
+
+        .car-detail-price {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f1f1;
+        }
+
+        .car-detail-price::before {
+            content: "Цена: ";
+            font-size: 20px;
+            color: #7f8c8d;
+            font-weight: normal;
+        }
+
+        .car-detail-action .button {
+            width: 100%;
+            max-width: 280px;
+            padding: 18px;
+            font-size: 18px;
+            border-radius: 10px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+        }
+
+        .car-detail-action .button:hover {
+            background: #c0392b;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .car-detail-subtitle {
+            font-size: 32px;
+            margin: 50px 0 30px;
+            color: #2c3e50;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .car-detail-subtitle::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100px;
+            height: 4px;
+            background: #e74c3c;
+            border-radius: 2px;
+        }
+
+        .car-specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .car-spec-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .car-spec-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .spec-name {
+            font-weight: bold;
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+
+        .spec-value {
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 17px;
+        }
+
+        .car-detail-description {
+            margin-top: 50px;
+            line-height: 1.8;
+            font-size: 17px;
+            color: #34495e;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .car-detail-description p {
+            margin-bottom: 20px;
+        }
+
+        .car-not-found {
+            text-align: center;
+            padding: 100px 0;
+        }
+
+        .car-not-found h3 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .car-not-found p {
+            margin-bottom: 30px;
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+
+        @media (max-width: 768px) {
+            .car-detail-top {
+                flex-direction: column;
+            }
+            
+            .car-detail-image {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .car-specs-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .car-detail-info {
+                position: static;
+                width: 100%;
+            }
+            
+            .car-detail-action .button {
+                max-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <header class="header">
@@ -130,14 +319,14 @@ $car = getCarById($pdo, $carId);
                     </div>
                     
                     <div class="car-detail-specs">
-                        <h3 class="car-detail-subtitle">Характеристики</h3>
+                        <h3 class="car-detail-subtitle">Технические характеристики</h3>
                         <div class="car-specs-grid">
                             <div class="car-spec-item">
                                 <span class="spec-name">Модель:</span>
                                 <span class="spec-value"><?= htmlspecialchars($car['name']) ?></span>
                             </div>
                             <div class="car-spec-item">
-                                <span class="spec-name">Двигатель:</span>
+                                <span class="spec-name">Тип двигателя:</span>
                                 <span class="spec-value"><?= htmlspecialchars($car['engine_type']) ?></span>
                             </div>
                             <div class="car-spec-item">
@@ -164,7 +353,7 @@ $car = getCarById($pdo, $carId);
                     </div>
                     
                     <div class="car-detail-description">
-                        <h3 class="car-detail-subtitle">Описание</h3>
+                        <h3 class="car-detail-subtitle">Описание автомобиля</h3>
                         <p><?= nl2br(htmlspecialchars($car['description'])) ?></p>
                     </div>
                 </div>
