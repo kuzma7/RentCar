@@ -41,10 +41,51 @@ $cars = $stmt->fetchAll();
 
         /* Добавляем стиль для изображений автомобилей */
         .car-item-img img {
-            max-width: 350px;  /* Максимальная ширина */
-            max-height: 300px; /* Максимальная высота */
+            width: 350px;  /* Максимальная ширина */
+            height: 300px; /* Максимальная высота */
             object-fit: cover; /* Сохраняет пропорции изображения, обрезая лишнее */
             border-radius: 10%;
+        }
+        
+        .car-item-action {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 60px; /* Фиксированная высота для контейнера */
+        }
+
+        .car-item-action .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 32px;
+            border-radius: 30px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #3d3d3d 100%);
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            height: 48px; /* Фиксированная высота кнопки */
+            min-width: 180px; /* Минимальная ширина */
+            line-height: 1; /* Сбрасываем line-height */
+            position: relative;
+            top: -1px; /* Микро-корректировка визуального центра */
+        }
+
+        .car-item-action .button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #000000 0%, #2d2d2d 100%);
+        }
+
+        .car-item-action .button:active {
+            transform: translateY(1px);
         }
     </style>
 </head>

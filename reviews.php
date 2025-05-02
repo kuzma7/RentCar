@@ -1,4 +1,28 @@
 <?php
+// Подключение к базе данных
+$host = 'localhost';
+$port = '3325';
+$db = 'car_rental';
+$user = 'root';
+$pass = 'root';
+$charset = 'utf8mb4';
+
+$dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+];
+
+try {
+    $pdo = new PDO($dsn, $user, $pass, $options);
+} catch (\PDOException $e) {
+    die("Ошибка подключения к БД: " . $e->getMessage());
+}
+
+// Получаем список автомобилей для выпадающего списка
+$stmt = $pdo->query("SELECT id, name FROM cars ORDER BY name");
+$cars = $stmt->fetchAll();
+
 $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
 ?>
 <!DOCTYPE html>
@@ -35,7 +59,7 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
             box-sizing: border-box;
         }
         
-        .review-input, .review-textarea {
+        .review-input, .review-textarea, .car-select {
             width: 100%;
             padding: 12px;
             margin-bottom: 15px;
@@ -43,6 +67,23 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
             border-radius: 4px;
             font-size: 16px;
             box-sizing: border-box;
+        }
+        
+        .car-select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            background-color: white;
+        }
+        
+        .car-select:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
         }
         
         .review-textarea {
@@ -202,8 +243,16 @@ $carValue = isset($_GET['car']) ? htmlspecialchars($_GET['car']) : '';
         <form id="reviewForm" class="review-form">
             <input type="text" class="review-input" name="name" placeholder="Ваше имя" required>
             <input type="text" class="review-input" name="phone" placeholder="Ваш телефон" required>
-            <input type="text" class="review-input" name="car" placeholder="Модель автомобиля"
-                   value="<?= $carValue ?>" required>
+            
+            <select class="car-select" name="car" required>
+                <option value="">-- Выберите автомобиль --</option>
+                <?php foreach ($cars as $car): ?>
+                    <option value="<?= htmlspecialchars($car['name']) ?>" 
+                            <?= ($carValue === $car['name']) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($car['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
             
             <div class="rating-container">
                 <input type="radio" id="star5" name="rating" value="5" required>
